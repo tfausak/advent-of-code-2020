@@ -1,4 +1,4 @@
-module Day01 exposing (main)
+module Day01 exposing (part1, part2)
 
 {-| <https://adventofcode.com/2020/day/1>
 
@@ -64,102 +64,18 @@ In your expense report, what is the product of the three entries that sum to
 
 -}
 
-import Browser
-import File
-import File.Select
-import Html
-import Html.Events
 import List.Extra
 import Maybe.Extra
-import Task
 
 
-type alias Flags =
-    ()
-
-
-type alias Model =
-    { input : String
-    }
-
-
-type Msg
-    = FileLoaded String
-    | FileRequested
-    | FileSelected File.File
-    | NoOp
-
-
-main : Program Flags Model Msg
-main =
-    Browser.element
-        { init = init
-        , view = view
-        , update = update
-        , subscriptions = subscriptions
-        }
-
-
-init : Flags -> ( Model, Cmd Msg )
-init _ =
-    ( { input = "" }, Cmd.none )
-
-
-view : Model -> Html.Html Msg
-view model =
-    Html.div []
-        [ Html.h1 [] [ Html.text "Advent of Code 2020" ]
-        , Html.h2 [] [ Html.text "Day 1" ]
-        , Html.div []
-            [ Html.button
-                [ Html.Events.onClick FileRequested ]
-                [ Html.text "Select a file" ]
-            ]
-        , Html.div []
-            [ Html.text "Part one: "
-            , model.input
-                |> part1
-                |> Maybe.Extra.unwrap "unknown" String.fromInt
-                |> Html.text
-            ]
-        , Html.div []
-            [ Html.text "Part two: "
-            , model.input
-                |> part2
-                |> Maybe.Extra.unwrap "unknown" String.fromInt
-                |> Html.text
-            ]
-        ]
-
-
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
-    case msg of
-        FileLoaded string ->
-            ( { model | input = string }, Cmd.none )
-
-        FileRequested ->
-            ( model, File.Select.file [ "text/plain" ] FileSelected )
-
-        FileSelected file ->
-            ( model, Task.perform FileLoaded (File.toString file) )
-
-        NoOp ->
-            ( model, Cmd.none )
-
-
-subscriptions : Model -> Sub Msg
-subscriptions _ =
-    Sub.none
-
-
-part1 : String -> Maybe Int
+part1 : String -> String
 part1 input =
     input
         |> parse
         |> Maybe.map List.Extra.uniquePairs
         |> Maybe.andThen (List.Extra.find (\( x, y ) -> x + y == 2020))
         |> Maybe.map (\( x, y ) -> x * y)
+        |> Maybe.Extra.unwrap "unknown" String.fromInt
 
 
 parse : String -> Maybe (List Int)
@@ -170,13 +86,14 @@ parse input =
         |> Maybe.Extra.traverse String.toInt
 
 
-part2 : String -> Maybe Int
+part2 : String -> String
 part2 input =
     input
         |> parse
         |> Maybe.map uniqueTriples
         |> Maybe.andThen (List.Extra.find (\( x, y, z ) -> x + y + z == 2020))
         |> Maybe.map (\( x, y, z ) -> x * y * z)
+        |> Maybe.Extra.unwrap "unknown" String.fromInt
 
 
 uniqueTriples : List a -> List ( a, a, a )
