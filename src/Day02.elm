@@ -38,6 +38,34 @@ limits of their respective policies.
 
 How many passwords are valid according to their policies?
 
+
+# Part Two
+
+While it appears you validated the passwords correctly, they don't seem to be
+what the Official Toboggan Corporate Authentication System is expecting.
+
+The shopkeeper suddenly realizes that he just accidentally explained the
+password policy rules from his old job at the sled rental place down the
+street! The Official Toboggan Corporate Policy actually works a little
+differently.
+
+Each policy actually describes two positions in the password, where `1` means
+the first character, `2` means the second character, and so on. (Be careful;
+Toboggan Corporate Policies have no concept of "index zero"!) Exactly one of
+these positions must contain the given letter. Other occurrences of the letter
+are irrelevant for the purposes of policy enforcement.
+
+Given the same example list from above:
+
+  - `1-3 a: abcde` is valid: position `1` contains `a` and position `3` does
+    not.
+  - `1-3 b: cdefg` is invalid: neither position `1` nor position `3` contains
+    `b`.
+  - `2-9 c: ccccccccc` is invalid: both position `2` and position `9` contain
+    `c`.
+
+How many passwords are valid according to the new interpretation of the policies?
+
 -}
 
 import List.Extra
@@ -47,35 +75,21 @@ import Set
 import String.Extra
 
 
-part1 : String -> String
-part1 string =
-    string
-        |> String.trimRight
-        |> String.lines
-        |> Result.Extra.combineMap (Parser.run parseLine)
-        |> Result.Extra.unpack Parser.deadEndsToString
-            (\lines ->
-                lines
-                    |> List.Extra.count isValid
-                    |> String.fromInt
-            )
-
-
-isValid : Line -> Bool
-isValid line =
-    let
-        count =
-            String.Extra.countOccurrences (String.fromChar line.letter) line.password
-    in
-    line.lowest <= count && count <= line.highest
-
-
 type alias Line =
     { lowest : Int
     , highest : Int
     , letter : Char
     , password : String
     }
+
+
+withLines : String -> (List Line -> String) -> String
+withLines string callback =
+    string
+        |> String.trimRight
+        |> String.lines
+        |> Result.Extra.combineMap (Parser.run parseLine)
+        |> Result.Extra.unpack Parser.deadEndsToString callback
 
 
 parseLine : Parser.Parser Line
@@ -119,6 +133,41 @@ parseString =
         }
 
 
+part1 : String -> String
+part1 string =
+    let
+        count line =
+            String.Extra.countOccurrences (String.fromChar line.letter) line.password
+
+        isValid line =
+            line.lowest <= count line && count line <= line.highest
+    in
+    withLines string
+        (\lines ->
+            lines
+                |> List.Extra.count isValid
+                |> String.fromInt
+        )
+
+
 part2 : String -> String
-part2 _ =
-    "TODO day 2 part 2"
+part2 string =
+    let
+        isValid line =
+            xor
+                (charAt (line.lowest - 1) line.password == Just line.letter)
+                (charAt (line.highest - 1) line.password == Just line.letter)
+    in
+    withLines string
+        (\lines ->
+            lines
+                |> List.Extra.count isValid
+                |> String.fromInt
+        )
+
+
+charAt : Int -> String -> Maybe Char
+charAt index string =
+    string
+        |> String.toList
+        |> List.Extra.getAt index
