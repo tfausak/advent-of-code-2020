@@ -2,6 +2,7 @@ module Main exposing (main)
 
 import Browser
 import Day01
+import Day02
 import File
 import File.Select as Select
 import Html
@@ -118,6 +119,12 @@ solve model =
 
                 ( 1, 2 ) ->
                     Day01.part2 content
+
+                ( 2, 1 ) ->
+                    Day02.part1 content
+
+                ( 2, 2 ) ->
+                    Day02.part2 content
 
                 _ ->
                     "no solution"
