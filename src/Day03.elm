@@ -74,6 +74,25 @@ encounter 7 trees.
 Starting at the top-left corner of your map and following a slope of right 3
 and down 1, how many trees would you encounter?
 
+
+# Part Two
+
+Time to check the rest of the slopes - you need to minimize the probability of
+a sudden arboreal stop, after all.
+
+Determine the number of trees you would encounter if, for each of the following
+slopes, you start at the top-left corner and traverse the map all the way to
+the bottom:
+
+  - Right 1, down 1.
+  - Right 3, down 1. (This is the slope you already checked.)
+  - Right 5, down 1.
+  - Right 7, down 1.
+  - Right 1, down 2.
+
+In the above example, these slopes would find `2`, `7`, `3`, `4`, and `2`
+tree(s) respectively; multiplied together, these produce the answer `336`.
+
 -}
 
 import Array exposing (Array)
@@ -81,7 +100,7 @@ import Array exposing (Array)
 
 part1 : String -> String
 part1 =
-    toGrid >> solveWith ( 0, 0 ) 0 >> String.fromInt
+    toGrid >> solve ( 3, 1 ) >> String.fromInt
 
 
 toGrid : String -> Array (Array Char)
@@ -99,36 +118,46 @@ stringToArray =
     String.toList >> Array.fromList
 
 
-solveWith : ( Int, Int ) -> Int -> Array (Array Char) -> Int
-solveWith ( x, y ) trees grid =
+solve : ( Int, Int ) -> Array (Array Char) -> Int
+solve =
+    solveWith ( 0, 0 ) 0
+
+
+solveWith : ( Int, Int ) -> Int -> ( Int, Int ) -> Array (Array Char) -> Int
+solveWith ( x, y ) trees ( dx, dy ) grid =
     if y > Array.length grid then
         trees
 
     else
         let
-            hitTree =
-                case Array.get y grid of
-                    Just line ->
-                        case Array.get (modBy (Array.length line) x) line of
-                            Just '#' ->
-                                True
-
-                            _ ->
-                                False
+            newTrees =
+                case getAt x y grid of
+                    Just '#' ->
+                        trees + 1
 
                     _ ->
-                        False
-
-            newTrees =
-                if hitTree then
-                    trees + 1
-
-                else
-                    trees
+                        trees
         in
-        solveWith ( x + 3, y + 1 ) newTrees grid
+        solveWith ( x + dx, y + dy ) newTrees ( dx, dy ) grid
+
+
+getAt : Int -> Int -> Array (Array a) -> Maybe a
+getAt x y g =
+    case Array.get y g of
+        Just line ->
+            Array.get (modBy (Array.length line) x) line
+
+        Nothing ->
+            Nothing
 
 
 part2 : String -> String
-part2 _ =
-    "TODO day 3 part 2"
+part2 string =
+    let
+        grid =
+            toGrid string
+    in
+    [ ( 1, 1 ), ( 3, 1 ), ( 5, 1 ), ( 7, 1 ), ( 1, 2 ) ]
+        |> List.map (\slope -> solve slope grid)
+        |> List.product
+        |> String.fromInt
