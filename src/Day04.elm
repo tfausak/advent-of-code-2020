@@ -85,51 +85,10 @@ type alias Passport =
     }
 
 
-dictToPassport : Dict String String -> Maybe Passport
-dictToPassport dict =
-    Just
-        (\byr iyr eyr hgt hcl ecl pid ->
-            { byr = byr
-            , iyr = iyr
-            , eyr = eyr
-            , hgt = hgt
-            , hcl = hcl
-            , ecl = ecl
-            , pid = pid
-            , cid = Dict.get "cid" dict
-            }
-        )
-        |> Maybe.Extra.andMap (Dict.get "byr" dict)
-        |> Maybe.Extra.andMap (Dict.get "iyr" dict)
-        |> Maybe.Extra.andMap (Dict.get "eyr" dict)
-        |> Maybe.Extra.andMap (Dict.get "hgt" dict)
-        |> Maybe.Extra.andMap (Dict.get "hcl" dict)
-        |> Maybe.Extra.andMap (Dict.get "ecl" dict)
-        |> Maybe.Extra.andMap (Dict.get "pid" dict)
-
-
 part1 : String -> String
 part1 string =
-    let
-        parsePair word =
-            case String.split ":" word of
-                [ k, v ] ->
-                    Just ( k, v )
-
-                _ ->
-                    Nothing
-
-        parsePassport line =
-            line
-                |> String.words
-                |> List.filterMap parsePair
-                |> Dict.fromList
-                |> dictToPassport
-    in
     string
-        |> String.trimRight
-        |> String.split "\n\n"
-        |> List.filterMap parsePassport
+        |> parsePassports
         |> List.length
         |> String.fromInt
 
@@ -137,3 +96,65 @@ part1 string =
 part2 : String -> String
 part2 _ =
     "TODO day 4 part 2"
+
+
+parsePassports : String -> List Passport
+parsePassports string =
+    string
+        |> String.split "\n\n"
+        |> List.filterMap parsePassport
+
+
+parsePassport : String -> Maybe Passport
+parsePassport string =
+    string
+        |> parsePairs
+        |> Dict.fromList
+        |> dictToPassport
+
+
+dictToPassport : Dict String String -> Maybe Passport
+dictToPassport dict =
+    Just Passport
+        |> required dict "byr"
+        |> required dict "iyr"
+        |> required dict "eyr"
+        |> required dict "hgt"
+        |> required dict "hcl"
+        |> required dict "ecl"
+        |> required dict "pid"
+        |> optional dict "cid"
+
+
+required : Dict comparable v -> comparable -> Maybe (v -> b) -> Maybe b
+required dict key =
+    Maybe.Extra.andMap (Dict.get key dict)
+
+
+optional : Dict comparable v -> comparable -> Maybe (Maybe v -> b) -> Maybe b
+optional dict key =
+    Maybe.Extra.andMap (Just (Dict.get key dict))
+
+
+parsePairs : String -> List ( String, String )
+parsePairs string =
+    string
+        |> String.words
+        |> List.filterMap parsePair
+
+
+parsePair : String -> Maybe ( String, String )
+parsePair string =
+    string
+        |> String.split ":"
+        |> listToTuple
+
+
+listToTuple : List a -> Maybe ( a, a )
+listToTuple list =
+    case list of
+        [ x, y ] ->
+            Just ( x, y )
+
+        _ ->
+            Nothing
