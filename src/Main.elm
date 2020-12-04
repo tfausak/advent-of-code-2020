@@ -4,6 +4,7 @@ import Browser
 import Day01
 import Day02
 import Day03
+import Day04
 import File
 import File.Select as Select
 import Html
@@ -132,6 +133,12 @@ solve model =
 
                 ( 3, 2 ) ->
                     Day03.part2 content
+
+                ( 4, 1 ) ->
+                    Day04.part1 content
+
+                ( 4, 2 ) ->
+                    Day04.part2 content
 
                 _ ->
                     "no solution"
