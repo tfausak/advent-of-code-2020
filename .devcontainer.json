@@ -1,11 +1,11 @@
 {
-  "containerUser": "node",
-  "extensions": [
-    "elmtooling.elm-ls-vscode"
-  ],
-  "forwardPorts": [
-    8000
-  ],
-  "image": "node:15.3.0-buster",
-  "postCreateCommand": "npm install"
+    "containerUser": "node",
+    "extensions": [
+        "elmtooling.elm-ls-vscode"
+    ],
+    "forwardPorts": [
+        8000
+    ],
+    "image": "node:15.3.0-buster",
+    "postCreateCommand": "npm install"
 }
