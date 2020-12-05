@@ -61,6 +61,21 @@ Here are some other boarding passes:
 As a sanity check, look through your list of boarding passes. What is the
 highest seat ID on a boarding pass?
 
+
+# Part Two
+
+Ding! The "fasten seat belt" signs have turned on. Time to find your seat.
+
+It's a completely full flight, so your seat should be the only missing boarding
+pass in your list. However, there's a catch: some of the seats at the very
+front and back of the plane don't exist on this aircraft, so they'll be missing
+from your list as well.
+
+Your seat wasn't at the very front or back, though; the seats with IDs `+1` and
+`-1` from yours will be in your list.
+
+What is the ID of your seat?
+
 -}
 
 
@@ -115,5 +130,31 @@ seatId ( row, column ) =
 
 
 part2 : String -> String
-part2 _ =
-    "TODO day 5 part 2"
+part2 string =
+    string
+        |> String.trimRight
+        |> String.lines
+        |> List.filterMap findSeat
+        |> List.map seatId
+        |> List.sort
+        |> findMySeat
+        |> Maybe.withDefault -1
+        |> String.fromInt
+
+
+findMySeat : List Int -> Maybe Int
+findMySeat xs =
+    case xs of
+        x :: y :: zs ->
+            let
+                z =
+                    x + 1
+            in
+            if z == y then
+                findMySeat (y :: zs)
+
+            else
+                Just z
+
+        _ ->
+            Nothing
