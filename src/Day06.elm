@@ -5,13 +5,18 @@ import Set exposing (Set, intersect)
 
 part1 : String -> String
 part1 =
+    solveWith unionSets
+
+
+part2 : String -> String
+part2 =
+    solveWith intersectSets
+
+
+solveWith : (List (Set Char) -> Set Char) -> String -> String
+solveWith f =
     String.split "\n\n"
-        >> List.map
-            (String.words
-                >> List.map stringToSet
-                >> unionSets
-                >> Set.size
-            )
+        >> List.map (String.words >> List.map stringToSet >> f >> Set.size)
         >> List.sum
         >> String.fromInt
 
@@ -24,19 +29,6 @@ stringToSet =
 unionSets : List (Set comparable) -> Set comparable
 unionSets =
     List.foldl Set.union Set.empty
-
-
-part2 : String -> String
-part2 =
-    String.split "\n\n"
-        >> List.map
-            (String.words
-                >> List.map stringToSet
-                >> intersectSets
-                >> Set.size
-            )
-        >> List.sum
-        >> String.fromInt
 
 
 intersectSets : List (Set comparable) -> Set comparable
