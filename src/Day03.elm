@@ -48,12 +48,11 @@ solveWith ( x, y ) trees ( dx, dy ) grid =
 
 getAt : Int -> Int -> Array (Array a) -> Maybe a
 getAt x y g =
-    case Array.get y g of
-        Just line ->
-            Array.get (modBy (Array.length line) x) line
-
-        Nothing ->
-            Nothing
+    Array.get y g
+        |> Maybe.andThen
+            (\line ->
+                Array.get (modBy (Array.length line) x) line
+            )
 
 
 part2 : String -> String
