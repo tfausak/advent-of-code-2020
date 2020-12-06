@@ -1,6 +1,6 @@
 module Day06 exposing (part1, part2)
 
-import Set exposing (Set)
+import Set exposing (Set, intersect)
 
 
 part1 : String -> String
@@ -27,5 +27,23 @@ unionSets =
 
 
 part2 : String -> String
-part2 _ =
-    "TODO day 6 part 2"
+part2 =
+    String.split "\n\n"
+        >> List.map
+            (String.words
+                >> List.map stringToSet
+                >> intersectSets
+                >> Set.size
+            )
+        >> List.sum
+        >> String.fromInt
+
+
+intersectSets : List (Set comparable) -> Set comparable
+intersectSets xs =
+    case xs of
+        [] ->
+            Set.empty
+
+        x :: ys ->
+            List.foldl Set.intersect x ys
