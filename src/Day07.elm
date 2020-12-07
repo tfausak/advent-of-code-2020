@@ -143,5 +143,30 @@ allIncomingNodes graph nodeContext =
 
 
 part2 : String -> String
-part2 _ =
-    "TODO day 7 part 2"
+part2 string =
+    let
+        ( ids, graph ) =
+            rulesToGraph (parseRules string)
+    in
+    Dict.get "shiny gold" ids
+        |> Maybe.andThen (\id -> Graph.get id graph)
+        |> Maybe.map (solve graph)
+        |> Maybe.withDefault -1
+        |> (\x -> x - 1)
+        |> String.fromInt
+
+
+solve : Graph String Int -> Graph.NodeContext String Int -> Int
+solve graph nodeContext =
+    IntDict.toList nodeContext.outgoing
+        |> List.map
+            (\( nodeId, edgeLabel ) ->
+                case Graph.get nodeId graph of
+                    Nothing ->
+                        0
+
+                    Just ctx ->
+                        edgeLabel * solve graph ctx
+            )
+        |> List.sum
+        |> (\x -> x + 1)
