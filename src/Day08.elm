@@ -1,6 +1,7 @@
 module Day08 exposing (part1, part2)
 
 import Array exposing (Array)
+import List.Extra
 import Set exposing (Set)
 
 
@@ -135,5 +136,53 @@ executeInstruction instruction state =
 
 
 part2 : String -> String
-part2 _ =
-    "TODO day 8 part 2"
+part2 string =
+    string
+        |> parseInstructions
+        |> makePossibilities
+        |> List.filterMap checkPossibility
+        |> List.head
+        |> Maybe.map (.accumulator >> String.fromInt)
+        |> Maybe.withDefault ":("
+
+
+checkPossibility : Array Instruction -> Maybe State
+checkPossibility instructions =
+    let
+        ( problem, state ) =
+            runProgram (makeState instructions)
+    in
+    case problem of
+        InfiniteLoop _ ->
+            Nothing
+
+        InvalidPointer _ ->
+            Just state
+
+
+makePossibilities : Array Instruction -> List (Array Instruction)
+makePossibilities instructions =
+    let
+        withInstruction index instruction =
+            Array.set index instruction instructions
+
+        makePossibility ( index, instruction ) =
+            changeInstruction instruction
+                |> Maybe.map (withInstruction index)
+    in
+    instructions
+        |> Array.toIndexedList
+        |> List.filterMap makePossibility
+
+
+changeInstruction : Instruction -> Maybe Instruction
+changeInstruction instruction =
+    case instruction.operation of
+        Acc ->
+            Nothing
+
+        Jmp ->
+            Just { instruction | operation = Nop }
+
+        Nop ->
+            Just { instruction | operation = Jmp }
