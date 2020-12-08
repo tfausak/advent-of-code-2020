@@ -1,11 +1,20 @@
-module Day08 exposing (main)
+module Day08 exposing (part1, part2)
 
-import Browser
-import Html exposing (Html)
-import Html.Events as Event
-import Dict exposing (Dict)
 import Array exposing (Array)
-import Html.Attributes as Attribute
+import Set exposing (Set)
+
+
+type Problem
+    = InfiniteLoop Int
+    | InvalidPointer Int
+
+
+type alias State =
+    { accumulator : Int
+    , instructions : Array Instruction
+    , pointer : Int
+    , seen : Set Int
+    }
 
 
 type alias Instruction =
@@ -20,167 +29,111 @@ type Operation
     | Nop
 
 
-parseInstructions : String -> List Instruction
-parseInstructions =
-    String.lines >> List.filterMap parseInstruction
+part1 : String -> String
+part1 string =
+    string
+        |> parseInstructions
+        |> makeState
+        |> runProgram
+        |> Tuple.second
+        |> .accumulator
+        |> String.fromInt
+
+
+parseInstructions : String -> Array Instruction
+parseInstructions string =
+    string
+        |> String.lines
+        |> List.filterMap parseInstruction
+        |> Array.fromList
 
 
 parseInstruction : String -> Maybe Instruction
 parseInstruction string =
     case String.words string of
-        [ operation, rawArgument ] ->
-            case String.toInt rawArgument of
-                Just argument ->
-                    case operation of
-                        "acc" ->
-                            Just { operation = Acc, argument = argument }
-
-                        "jmp" ->
-                            Just { operation = Jmp, argument = argument }
-
-                        "nop" ->
-                            Just { operation = Nop, argument = argument }
-
-                        _ ->
-                            Nothing
-
-                _ ->
-                    Nothing
+        [ operation, argument ] ->
+            Maybe.map2 Instruction
+                (parseOperation operation)
+                (parseArgument argument)
 
         _ ->
             Nothing
 
 
-type alias Flags =
-    ()
+parseOperation : String -> Maybe Operation
+parseOperation string =
+    case string of
+        "acc" ->
+            Just Acc
+
+        "jmp" ->
+            Just Jmp
+
+        "nop" ->
+            Just Nop
+
+        _ ->
+            Nothing
 
 
-type alias Model =
-    { input : String
-    , instructions : Array Instruction
-    , pointer : Int
-    , accumulator : Int
-    , order : Dict Int Int
-    , count : Int
-    }
+parseArgument : String -> Maybe Int
+parseArgument string =
+    String.toInt string
 
 
-type Msg
-    = Run
-    | Step
-    | UpdateInput String
-
-
-main : Program Flags Model Msg
-main =
-    Browser.element
-        { init = init
-        , view = view
-        , update = update
-        , subscriptions = subscriptions
-        }
-
-
-init : Flags -> ( Model, Cmd Msg )
-init _ =
-    initWith """
-        nop +0
-        acc +1
-        jmp +4
-        acc +3
-        jmp -3
-        acc -99
-        acc +1
-        jmp -4
-        acc +6
-        """
-
-initWith : String -> (Model, Cmd Msg)
-initWith input = pure
-    { input = clean input
-    , instructions = Array.fromList (parseInstructions input)
+makeState : Array Instruction -> State
+makeState instructions =
+    { accumulator = 0
+    , instructions = instructions
     , pointer = 0
-    , accumulator = 0
-    , order = Dict.empty
-    , count = 1
+    , seen = Set.empty
     }
 
 
-view : Model -> Html Msg
-view model =
-    Html.div []
-        [ Html.h1 [] [ Html.text "Advent of Code 2020 day 8 part 1" ]
-        , Html.textarea [ Event.onInput UpdateInput ] [ Html.text model.input ]
-        , Html.button [Event.onClick Step] [Html.text "Step"]
-        , Html.button [Event.onClick Run] [Html.text "Run"]
-        , Html.p []
-            [ Html.text "Accumulator = "
-            , Html.text (String.fromInt model.accumulator)
-            ]
-        , Html.p []
-            [ case Dict.get model.pointer model.order of
-                Nothing -> Html.text "not seen before"
-                Just n -> Html.text ("instruction " ++ String.fromInt (model.pointer + 1) ++ " seen before at step " ++ String.fromInt n)
-            ]
-        , model.instructions
-            |> Array.toList
-            |> List.indexedMap (\ index instruction -> Html.li []
-                [ Html.text <| case instruction.operation of
-                    Acc -> "acc"
-                    Jmp -> "jmp"
-                    Nop -> "nop"
-                , Html.text " "
-                , Html.text (String.fromInt instruction.argument)
-                , case Dict.get index model.order of
-                    Nothing -> Html.text ""
-                    Just order -> Html.text (" (" ++ String.fromInt order ++ ")")
-                , if index == model.pointer then Html.text " <-" else Html.text ""
-                ])
-            |> Html.ol [Attribute.style "font-family" "monospace"]
-        ]
+runProgram : State -> ( Problem, State )
+runProgram state =
+    case stepProgram state of
+        Err problem ->
+            ( problem, state )
+
+        Ok newState ->
+            runProgram newState
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
-    case msg of
-        Run -> pure ( run model )
-        Step -> pure (step model)
-        UpdateInput input ->
-            initWith input
+stepProgram : State -> Result Problem State
+stepProgram state =
+    if Set.member state.pointer state.seen then
+        Err (InfiniteLoop state.pointer)
 
-run : Model -> Model
-run model = if Dict.member model.pointer model.order
-    then model
-    else run (step model)
+    else
+        case Array.get state.pointer state.instructions of
+            Nothing ->
+                Err (InvalidPointer state.pointer)
 
-step : Model -> Model
-step model = case Array.get model.pointer model.instructions of
-    Nothing -> model
-    Just instruction ->
-        let
-            newModel = { model | count = model.count + 1, pointer = model.pointer + 1
-                , order = Dict.update model.pointer (\ m -> Just <| case m of
-                    Nothing -> model.count
-                    Just n -> n) model.order }
-        in case instruction.operation of
-            Acc -> { newModel | accumulator = model.accumulator + instruction.argument }
-            Jmp -> { newModel | pointer = model.pointer + instruction.argument }
-            Nop -> newModel
+            Just instruction ->
+                Ok (executeInstruction instruction state)
 
 
-subscriptions : Model -> Sub Msg
-subscriptions _ =
-    Sub.none
+executeInstruction : Instruction -> State -> State
+executeInstruction instruction state =
+    let
+        newState =
+            { state
+                | pointer = state.pointer + 1
+                , seen = Set.insert state.pointer state.seen
+            }
+    in
+    case instruction.operation of
+        Acc ->
+            { newState | accumulator = state.accumulator + instruction.argument }
+
+        Jmp ->
+            { newState | pointer = state.pointer + instruction.argument }
+
+        Nop ->
+            newState
 
 
-pure : model -> ( model, Cmd msg )
-pure model =
-    ( model, Cmd.none )
-
-
-clean : String -> String
-clean =
-    String.lines
-        >> List.map String.trim
-        >> List.filter (not << String.isEmpty)
-        >> String.join "\n"
+part2 : String -> String
+part2 _ =
+    "TODO day 8 part 2"
