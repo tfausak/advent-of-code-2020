@@ -1,7 +1,6 @@
 module Day08 exposing (part1, part2)
 
 import Array exposing (Array)
-import List.Extra
 import Set exposing (Set)
 
 
