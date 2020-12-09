@@ -10,18 +10,23 @@ part1 string =
         |> String.lines
         |> List.filterMap String.toInt
         |> Array.fromList
-        |> solveAt 25
+        |> findInvalidNumber preambleSize
         |> Maybe.map String.fromInt
         |> Maybe.withDefault ":("
 
 
-solveAt : Int -> Array Int -> Maybe Int
-solveAt index all =
+preambleSize : Int
+preambleSize =
+    25
+
+
+findInvalidNumber : Int -> Array Int -> Maybe Int
+findInvalidNumber index all =
     Array.get index all
         |> Maybe.andThen
             (\number ->
-                if isGood number (Array.slice (index - 25) index all) then
-                    solveAt (index + 1) all
+                if isGood number (Array.slice (index - preambleSize) index all) then
+                    findInvalidNumber (index + 1) all
 
                 else
                     Just number
@@ -36,5 +41,37 @@ isGood target numbers =
 
 
 part2 : String -> String
-part2 _ =
-    "d9p2"
+part2 string =
+    let
+        numbers =
+            string
+                |> String.lines
+                |> List.filterMap String.toInt
+                |> Array.fromList
+    in
+    findInvalidNumber preambleSize numbers
+        |> Maybe.andThen (\target -> findEncryptionWeakness target numbers)
+        |> Maybe.map (\( lo, hi ) -> String.fromInt (lo + hi))
+        |> Maybe.withDefault ":("
+
+
+findEncryptionWeakness : Int -> Array Int -> Maybe ( Int, Int )
+findEncryptionWeakness =
+    findEncryptionWeaknessWith 0 1
+
+
+findEncryptionWeaknessWith : Int -> Int -> Int -> Array Int -> Maybe ( Int, Int )
+findEncryptionWeaknessWith from to target numbers =
+    let
+        slice =
+            Array.toList (Array.slice from to numbers)
+    in
+    case compare (List.sum slice) target of
+        LT ->
+            findEncryptionWeaknessWith from (to + 1) target numbers
+
+        EQ ->
+            Maybe.map2 Tuple.pair (List.minimum slice) (List.maximum slice)
+
+        GT ->
+            findEncryptionWeaknessWith (from + 1) (from + 2) target numbers
