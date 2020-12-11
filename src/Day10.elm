@@ -2,6 +2,7 @@ module Day10 exposing (part1, part2)
 
 import Dict exposing (Dict)
 import Dict.Extra
+import List.Extra
 
 
 part1 : String -> String
@@ -10,7 +11,7 @@ part1 string =
         |> String.lines
         |> List.filterMap String.toInt
         |> List.sort
-        |> (\jolts -> 0 :: jolts)
+        |> (::) 0
         |> pairs
         |> List.map (\( lo, hi ) -> hi - lo)
         |> Dict.Extra.frequencies
@@ -20,8 +21,32 @@ part1 string =
 
 
 part2 : String -> String
-part2 _ =
-    "TODO day 10 part 2"
+part2 string =
+    string
+        |> String.lines
+        |> List.filterMap String.toInt
+        |> List.sort
+        |> (::) 0
+        |> pairs
+        |> List.map (\( lo, hi ) -> hi - lo)
+        |> List.Extra.group
+        |> List.filter (\( x, _ ) -> x == 1)
+        |> List.map (\( _, xs ) -> List.length xs + 1)
+        |> List.map (\x -> tribonacci (x + 1))
+        |> List.product
+        |> String.fromInt
+
+
+tribonacci : Int -> Int
+tribonacci n =
+    if n < 1 then
+        0
+
+    else if n < 3 then
+        1
+
+    else
+        tribonacci (n - 1) + tribonacci (n - 2) + tribonacci (n - 3)
 
 
 solve : Dict Int Int -> Maybe Int
