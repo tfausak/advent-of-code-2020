@@ -1,4 +1,4 @@
-module Day11 exposing (main)
+module Day11Part1 exposing (main)
 
 import Array exposing (Array)
 import Browser
