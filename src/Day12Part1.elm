@@ -1,8 +1,8 @@
-module Day12 exposing (part1, part2)
+module Day12Part1 exposing (solve)
 
 
-part1 : String -> String
-part1 string =
+solve : String -> String
+solve string =
     string
         |> stringToInstructions
         |> List.foldl handleInstruction startingShip
