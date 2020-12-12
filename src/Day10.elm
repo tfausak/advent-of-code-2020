@@ -1,6 +1,6 @@
 module Day10 exposing (part1, part2)
 
-import Dict
+import Dict exposing (Dict)
 import Dict.Extra
 import List.Extra
 
@@ -8,22 +8,16 @@ import List.Extra
 part1 : String -> String
 part1 string =
     string
-        |> handleInput
-        |> Dict.Extra.frequencies
-        |> (\x -> Maybe.map2 (*) (Dict.get 1 x) (Dict.get 3 x))
-        |> Maybe.map String.fromInt
-        |> Maybe.withDefault ":("
-
-
-handleInput : String -> List Int
-handleInput string =
-    string
         |> String.lines
         |> List.filterMap String.toInt
         |> List.sort
         |> addBounds
         |> pairs
         |> List.map (\( lo, hi ) -> hi - lo)
+        |> Dict.Extra.frequencies
+        |> (\x -> Maybe.map2 (*) (Dict.get 1 x) (Dict.get 3 x))
+        |> Maybe.map String.fromInt
+        |> Maybe.withDefault ":("
 
 
 addBounds : List Int -> List Int
@@ -44,21 +38,21 @@ pairs list =
 part2 : String -> String
 part2 string =
     string
-        |> handleInput
-        |> List.Extra.group
-        |> List.filter (\( x, _ ) -> x == 1)
-        |> List.map (\( _, xs ) -> tribonacci (List.length xs + 1))
-        |> List.product
-        |> String.fromInt
+        |> String.lines
+        |> List.filterMap String.toInt
+        |> List.sort
+        |> List.foldl step (Dict.singleton 0 1)
+        |> Dict.values
+        |> List.Extra.last
+        |> Maybe.map String.fromInt
+        |> Maybe.withDefault ":("
 
 
-tribonacci : Int -> Int
-tribonacci n =
-    if n < 0 then
-        0
-
-    else if n < 2 then
-        1
-
-    else
-        tribonacci (n - 1) + tribonacci (n - 2) + tribonacci (n - 3)
+step : Int -> Dict Int Int -> Dict Int Int
+step n dict =
+    let
+        at d =
+            Dict.get (n - d) dict
+                |> Maybe.withDefault 0
+    in
+    Dict.insert n (at 1 + at 2 + at 3) dict
