@@ -1,6 +1,6 @@
 module Day10 exposing (part1, part2)
 
-import Dict exposing (Dict)
+import Dict
 import Dict.Extra
 import List.Extra
 

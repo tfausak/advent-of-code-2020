@@ -6,7 +6,6 @@ import Html as H exposing (Html)
 import Html.Attributes as A
 import Html.Events as E
 import List.Extra
-import Task
 
 
 type alias Grid a =
@@ -218,29 +217,61 @@ getAt row column grid =
 
 getNeighbors : Int -> Int -> Grid Seat -> List Seat
 getNeighbors row column grid =
-  directions
-    |> List.filterMap (\ d -> findFirst d row column grid)
+    directions
+        |> List.filterMap (\d -> findFirst d row column grid)
 
-type Direction = N | NE | E | SE | S | SW | W | NW
+
+type Direction
+    = N
+    | NE
+    | E
+    | SE
+    | S
+    | SW
+    | W
+    | NW
+
 
 directions : List Direction
-directions = [ N, NE, E, SE, S, SW, W, NW ]
+directions =
+    [ N, NE, E, SE, S, SW, W, NW ]
+
 
 findFirst : Direction -> Int -> Int -> Grid Seat -> Maybe Seat
 findFirst direction row column grid =
-  let
-    ( newRow, newColumn ) = case direction of
-      N -> (row + 1, column )
-      NE -> (row + 1, column + 1 )
-      E -> (row, column + 1 )
-      SE -> (row - 1, column + 1 )
-      S -> (row - 1, column )
-      SW -> (row - 1, column - 1 )
-      W -> (row, column - 1 )
-      NW -> (row  +1, column - 1 )
-  in case getAt newRow newColumn grid of
-    Just Floor -> findFirst direction newRow newColumn grid
-    x -> x
+    let
+        ( newRow, newColumn ) =
+            case direction of
+                N ->
+                    ( row + 1, column )
+
+                NE ->
+                    ( row + 1, column + 1 )
+
+                E ->
+                    ( row, column + 1 )
+
+                SE ->
+                    ( row - 1, column + 1 )
+
+                S ->
+                    ( row - 1, column )
+
+                SW ->
+                    ( row - 1, column - 1 )
+
+                W ->
+                    ( row, column - 1 )
+
+                NW ->
+                    ( row + 1, column - 1 )
+    in
+    case getAt newRow newColumn grid of
+        Just Floor ->
+            findFirst direction newRow newColumn grid
+
+        x ->
+            x
 
 
 subscriptions : Model -> Sub Msg

@@ -6,7 +6,6 @@ import Html as H exposing (Html)
 import Html.Attributes as A
 import Html.Events as E
 import List.Extra
-import Task
 
 
 type alias Grid a =

@@ -195,8 +195,3 @@ charToAction char =
 
         _ ->
             Nothing
-
-
-part2 : String -> String
-part2 _ =
-    "TODO day 12 part 2"
