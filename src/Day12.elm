@@ -1,12 +1,22 @@
-module Day12Part2 exposing (solve)
+module Day12 exposing (part1, part2)
 
 
-solve : String -> String
-solve string =
+part1 : String -> String
+part1 =
+    solveWith handler1
+
+
+part2 : String -> String
+part2 =
+    solveWith handler2
+
+
+solveWith : (Instruction -> Ship -> Ship) -> String -> String
+solveWith handler string =
     string
         |> String.words
         |> List.filterMap stringToInstruction
-        |> List.foldl handleInstruction startingShip
+        |> List.foldl handler startingShip
         |> .position
         |> manhattanDistance startingShip.position
         |> String.fromInt
@@ -52,8 +62,21 @@ charToAction char =
             Nothing
 
 
-handleInstruction : Instruction -> Ship -> Ship
-handleInstruction instruction ship =
+handler1 : Instruction -> Ship -> Ship
+handler1 instruction ship =
+    case instruction.action of
+        Move direction ->
+            { ship | position = move direction instruction.value ship.position }
+
+        Rotate rotation ->
+            { ship | direction = turn rotation (instruction.value // 90) ship.direction }
+
+        Forward ->
+            { ship | position = move ship.direction instruction.value ship.position }
+
+
+handler2 : Instruction -> Ship -> Ship
+handler2 instruction ship =
     case instruction.action of
         Move direction ->
             { ship | waypoint = move direction instruction.value ship.waypoint }
@@ -107,6 +130,32 @@ rotateRight position =
     }
 
 
+turn : Rotation -> Int -> Direction -> Direction
+turn rotation value direction =
+    case rotation of
+        Clockwise ->
+            applyN turnRight (modBy 4 value) direction
+
+        Counterclockwise ->
+            turn Clockwise (negate value) direction
+
+
+turnRight : Direction -> Direction
+turnRight direction =
+    case direction of
+        North ->
+            East
+
+        East ->
+            South
+
+        South ->
+            West
+
+        West ->
+            North
+
+
 forward : Position -> Int -> Position -> Position
 forward waypoint value position =
     { x = position.x + (value * waypoint.x)
@@ -116,7 +165,8 @@ forward waypoint value position =
 
 startingShip : Ship
 startingShip =
-    { position = { x = 0, y = 0 }
+    { direction = East
+    , position = { x = 0, y = 0 }
     , waypoint = { x = 10, y = 1 }
     }
 
@@ -151,7 +201,8 @@ type Rotation
 
 
 type alias Ship =
-    { position : Position
+    { direction : Direction
+    , position : Position
     , waypoint : Position
     }
 
