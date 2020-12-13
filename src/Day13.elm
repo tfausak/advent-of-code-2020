@@ -63,10 +63,32 @@ sieveWith candidate step list =
 
         ( x, n ) :: rest ->
             if modBy n candidate == x then
-                sieveWith candidate (step * n) rest
+                sieveWith candidate (lcm step n) rest
 
             else
                 sieveWith (candidate + step) step list
+
+
+lcm : Int -> Int -> Int
+lcm a b =
+    let
+        d =
+            gcd a b
+    in
+    if d == 1 then
+        a * b
+
+    else
+        (a * b) // d
+
+
+gcd : Int -> Int -> Int
+gcd a b =
+    if b == 0 then
+        a
+
+    else
+        gcd b (modBy b a)
 
 
 listToTuple : List a -> Maybe ( a, a )
