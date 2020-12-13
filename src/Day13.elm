@@ -21,8 +21,52 @@ part1 string =
 
 
 part2 : String -> String
-part2 _ =
-    "TODO"
+part2 input =
+    input
+        |> String.words
+        |> List.drop 1
+        |> List.head
+        |> Maybe.andThen
+            (\schedule ->
+                schedule
+                    |> String.split ","
+                    |> List.indexedMap Tuple.pair
+                    |> List.filterMap
+                        (\( index, id ) ->
+                            id
+                                |> String.toInt
+                                |> Maybe.map (Tuple.pair index)
+                        )
+                    |> List.sortBy (\( _, x ) -> negate x)
+                    |> List.map (\( i, x ) -> ( modBy x (x - i), x ))
+                    |> sieve
+            )
+        |> Maybe.map String.fromInt
+        |> Maybe.withDefault ":("
+
+
+sieve : List ( Int, Int ) -> Maybe Int
+sieve xs =
+    case xs of
+        [] ->
+            Nothing
+
+        ( x, n ) :: ys ->
+            Just (sieveWith x n ys)
+
+
+sieveWith : Int -> Int -> List ( Int, Int ) -> Int
+sieveWith candidate step list =
+    case list of
+        [] ->
+            candidate
+
+        ( x, n ) :: rest ->
+            if modBy n candidate == x then
+                sieveWith candidate (step * n) rest
+
+            else
+                sieveWith (candidate + step) step list
 
 
 listToTuple : List a -> Maybe ( a, a )
