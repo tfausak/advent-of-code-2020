@@ -59,7 +59,7 @@ init _ =
     ( { content = Nothing
       , day = 14
       , file = Nothing
-      , part = 1
+      , part = 2
       }
     , Cmd.none
     )
