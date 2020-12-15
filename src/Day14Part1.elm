@@ -1,11 +1,11 @@
-module Day14 exposing (part1, part2)
+module Day14Part1 exposing (solve)
 
 import Dict exposing (Dict)
 import UInt64 as U64 exposing (UInt64)
 
 
-part1 : String -> String
-part1 string =
+solve : String -> String
+solve string =
     string
         |> String.lines
         |> List.filterMap stringToInstruction
@@ -74,8 +74,3 @@ handleInstruction instruction ( mask, memory ) =
 
         Mem address value ->
             ( mask, Dict.insert address (mask value) memory )
-
-
-part2 : String -> String
-part2 _ =
-    "TODO day 14 part 2"

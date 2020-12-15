@@ -14,7 +14,8 @@ import Day10
 import Day11
 import Day12
 import Day13
-import Day14
+import Day14Part1
+import Day14Part2
 import File
 import File.Select as Select
 import Html
@@ -205,10 +206,10 @@ solve model =
                     Day13.part2 content
 
                 ( 14, 1 ) ->
-                    Day14.part1 content
+                    Day14Part1.solve content
 
                 ( 14, 2 ) ->
-                    Day14.part2 content
+                    Day14Part2.solve content
 
                 _ ->
                     "no solution"
