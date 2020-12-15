@@ -1,6 +1,6 @@
 module Day14 exposing (part1, part2)
 
-import Dict
+import Dict exposing (Dict)
 import UInt64 as U64 exposing (UInt64)
 
 
@@ -9,16 +9,7 @@ part1 string =
     string
         |> String.lines
         |> List.filterMap stringToInstruction
-        |> List.foldl
-            (\instruction ( mask, memory ) ->
-                case instruction of
-                    Mask newMask ->
-                        ( newMask, memory )
-
-                    Mem address value ->
-                        ( mask, Dict.insert address (mask value) memory )
-            )
-            ( identity, Dict.empty )
+        |> List.foldl handleInstruction ( identity, Dict.empty )
         |> Tuple.second
         |> Dict.values
         |> List.foldl U64.add U64.zero
@@ -26,8 +17,16 @@ part1 string =
 
 
 type Instruction
-    = Mask (UInt64 -> UInt64)
+    = Mask Mask
     | Mem Int UInt64
+
+
+type alias Mask =
+    UInt64 -> UInt64
+
+
+type alias Mem =
+    Dict Int UInt64
 
 
 stringToInstruction : String -> Maybe Instruction
@@ -46,28 +45,35 @@ stringToInstruction string =
             Nothing
 
 
-stringToMask : String -> Maybe (UInt64 -> UInt64)
+stringToMask : String -> Maybe Mask
 stringToMask string =
     string
-        |> String.reverse
         |> String.toList
-        |> List.indexedMap Tuple.pair
-        |> List.foldl
-            (\( index, char ) maybeBitmask ->
-                case ( char, maybeBitmask ) of
-                    ( 'X', _ ) ->
-                        maybeBitmask
+        |> List.foldr charToMask ( 0, Just identity )
+        |> Tuple.second
 
-                    ( '1', Just bitmask ) ->
-                        Just (bitmask >> U64.setBit index 1)
 
-                    ( '0', Just bitmask ) ->
-                        Just (bitmask >> U64.setBit index 0)
+charToMask : Char -> ( Int, Maybe Mask ) -> ( Int, Maybe Mask )
+charToMask char ( index, maybeMask ) =
+    case ( char, maybeMask ) of
+        ( '0', Just mask ) ->
+            ( index + 1, Just (mask >> U64.setBit index 0) )
 
-                    _ ->
-                        Nothing
-            )
-            (Just identity)
+        ( '1', Just mask ) ->
+            ( index + 1, Just (mask >> U64.setBit index 1) )
+
+        _ ->
+            ( index + 1, maybeMask )
+
+
+handleInstruction : Instruction -> ( Mask, Mem ) -> ( Mask, Mem )
+handleInstruction instruction ( mask, memory ) =
+    case instruction of
+        Mask newMask ->
+            ( newMask, memory )
+
+        Mem address value ->
+            ( mask, Dict.insert address (mask value) memory )
 
 
 part2 : String -> String
