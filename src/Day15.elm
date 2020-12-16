@@ -10,9 +10,8 @@ part1 =
 
 
 part2 : String -> String
-part2 =
-    -- TODO: Too slow! Have 300,000 but want 30,000,000.
-    solveWith 300000
+part2 _ =
+    "Elm is too slow to do this."
 
 
 solveWith : Int -> String -> String
