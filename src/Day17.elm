@@ -1,61 +1,81 @@
-module Day17 exposing (main)
+module Day17 exposing (part1, part2)
 
-import Browser
-import Html exposing (Html)
-import Html.Events as E
-
-
-type alias Model =
-    { cycle : Int
-    , input : String
-    }
-
-
-type Msg
-    = UpdateInput String
-
-
-main : Program () Model Msg
-main =
-    Browser.element
-        { init =
-            always
-                ( { cycle = 0
-                  , input = String.join "\n" [ ".#.", "..#", "###" ]
-                  }
-                , Cmd.none
-                )
-        , view = view
-        , update = update
-        , subscriptions = always Sub.none
-        }
-
-
-view : Model -> Html Msg
-view model =
-    Html.div []
-        [ Html.textarea [ E.onInput UpdateInput ] [ Html.text model.input ]
-        ]
-
-
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
-    case msg of
-        UpdateInput input ->
-            ( { model | cycle = 0, input = input }, Cmd.none )
+import Set exposing (Set)
 
 
 type alias Point =
-    { x : Int
-    , y : Int
-    , z : Int
-    }
+    ( Int, Int, Int )
 
 
-getNeighbors : Point -> List Point
-getNeighbors origin =
+part1 : String -> String
+part1 string =
+    string
+        |> parseGrid
+        |> apply step 6
+        |> Set.size
+        |> String.fromInt
+
+
+part2 : String -> String
+part2 _ =
+    "TODO day 17 part 2"
+
+
+parseGrid : String -> Set Point
+parseGrid string =
+    string
+        |> String.words
+        |> List.indexedMap parseRow
+        |> List.concat
+        |> Set.fromList
+
+
+parseRow : Int -> String -> List Point
+parseRow y string =
+    string
+        |> String.toList
+        |> List.indexedMap (parseCell y)
+        |> List.filterMap identity
+
+
+parseCell : Int -> Int -> Char -> Maybe Point
+parseCell y x char =
+    if char == '#' then
+        Just ( x, y, 0 )
+
+    else
+        Nothing
+
+
+apply : (a -> a) -> Int -> a -> a
+apply f n x =
+    if n < 1 then
+        x
+
+    else
+        apply f (n - 1) (f x)
+
+
+step : Set Point -> Set Point
+step points =
+    points
+        |> candidates
+        |> Set.filter (isActive points)
+
+
+candidates : Set Point -> Set Point
+candidates points =
+    points
+        |> Set.toList
+        |> List.concatMap neighbors
+        |> Set.fromList
+        |> Set.union points
+
+
+neighbors : Point -> List Point
+neighbors ( x, y, z ) =
     let
-        deltas =
+        ds =
             [ -1, 0, 1 ]
 
         fz dx dy dz =
@@ -63,12 +83,29 @@ getNeighbors origin =
                 Nothing
 
             else
-                Just { x = origin.x + dx, y = origin.y + dy, z = origin.z + dz }
+                Just ( x + dx, y + dy, z + dz )
 
         fy dx dy =
-            List.filterMap (fz dx dy) deltas
+            List.filterMap (fz dx dy) ds
 
         fx dx =
-            List.concatMap (fy dx) deltas
+            List.concatMap (fy dx) ds
     in
-    List.concatMap fx deltas
+    List.concatMap fx ds
+
+
+isActive : Set Point -> Point -> Bool
+isActive points point =
+    let
+        count =
+            point
+                |> neighbors
+                |> Set.fromList
+                |> Set.intersect points
+                |> Set.size
+    in
+    if Set.member point points then
+        2 <= count && count <= 3
+
+    else
+        count == 3

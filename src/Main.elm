@@ -18,6 +18,7 @@ import Day14Part1
 import Day14Part2
 import Day15
 import Day16
+import Day17
 import File
 import File.Select as Select
 import Html
@@ -59,9 +60,9 @@ main =
 init : Flags -> ( Model, Cmd Msg )
 init _ =
     ( { content = Nothing
-      , day = 16
+      , day = 17
       , file = Nothing
-      , part = 2
+      , part = 1
       }
     , Cmd.none
     )
@@ -224,6 +225,12 @@ solve model =
 
                 ( 16, 2 ) ->
                     Day16.part2 content
+
+                ( 17, 1 ) ->
+                    Day17.part1 content
+
+                ( 17, 2 ) ->
+                    Day17.part2 content
 
                 _ ->
                     "no solution"
