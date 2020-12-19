@@ -18,7 +18,8 @@ import Day14Part1
 import Day14Part2
 import Day15
 import Day16
-import Day17
+import Day17Part1
+import Day17Part2
 import File
 import File.Select as Select
 import Html
@@ -62,7 +63,7 @@ init _ =
     ( { content = Nothing
       , day = 17
       , file = Nothing
-      , part = 1
+      , part = 2
       }
     , Cmd.none
     )
@@ -227,10 +228,10 @@ solve model =
                     Day16.part2 content
 
                 ( 17, 1 ) ->
-                    Day17.part1 content
+                    Day17Part1.solve content
 
                 ( 17, 2 ) ->
-                    Day17.part2 content
+                    Day17Part2.solve content
 
                 _ ->
                     "no solution"

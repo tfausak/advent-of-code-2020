@@ -1,24 +1,19 @@
-module Day17 exposing (part1, part2)
+module Day17Part2 exposing (solve)
 
 import Set exposing (Set)
 
 
 type alias Point =
-    ( Int, Int, Int )
+    ( ( Int, Int ), ( Int, Int ) )
 
 
-part1 : String -> String
-part1 string =
+solve : String -> String
+solve string =
     string
         |> parseGrid
         |> apply step 6
         |> Set.size
         |> String.fromInt
-
-
-part2 : String -> String
-part2 _ =
-    "TODO day 17 part 2"
 
 
 parseGrid : String -> Set Point
@@ -41,7 +36,7 @@ parseRow y string =
 parseCell : Int -> Int -> Char -> Maybe Point
 parseCell y x char =
     if char == '#' then
-        Just ( x, y, 0 )
+        Just ( ( x, y ), ( 0, 0 ) )
 
     else
         Nothing
@@ -73,20 +68,23 @@ candidates points =
 
 
 neighbors : Point -> List Point
-neighbors ( x, y, z ) =
+neighbors ( ( x, y ), ( z, w ) ) =
     let
         ds =
             [ -1, 0, 1 ]
 
-        fz dx dy dz =
-            if dx == 0 && dy == 0 && dz == 0 then
+        fw dx dy dz dw =
+            if dx == 0 && dy == 0 && dz == 0 && dw == 0 then
                 Nothing
 
             else
-                Just ( x + dx, y + dy, z + dz )
+                Just ( ( x + dx, y + dy ), ( z + dz, w + dw ) )
+
+        fz dx dy dz =
+            List.filterMap (fw dx dy dz) ds
 
         fy dx dy =
-            List.filterMap (fz dx dy) ds
+            List.concatMap (fz dx dy) ds
 
         fx dx =
             List.concatMap (fy dx) ds
