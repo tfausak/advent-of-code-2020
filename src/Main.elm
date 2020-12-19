@@ -21,6 +21,7 @@ import Day16
 import Day17Part1
 import Day17Part2
 import Day18
+import Day19
 import File
 import File.Select as Select
 import Html
@@ -62,9 +63,9 @@ main =
 init : Flags -> ( Model, Cmd Msg )
 init _ =
     ( { content = Nothing
-      , day = 18
+      , day = 19
       , file = Nothing
-      , part = 2
+      , part = 1
       }
     , Cmd.none
     )
@@ -74,13 +75,13 @@ view : Model -> Html.Html Msg
 view model =
     Html.div
         [ Attribute.style "font-family" "sans-serif"
-        , Attribute.style "line-height" "1.5em"
-        , Attribute.style "margin" "1.5em auto"
-        , Attribute.style "max-width" "40em"
-        , Attribute.style "padding" "0 1.5em"
+        , Attribute.style "line-height" "3em"
+        , Attribute.style "margin" "3em"
+        , Attribute.style "text-align" "center"
         ]
         [ Html.h1 [] [ Html.text "Advent of Code" ]
-        , Html.p []
+        , Html.h2 [] [ Html.text "2020" ]
+        , Html.div []
             [ Html.text "Day "
             , Html.input
                 [ Attribute.max "25"
@@ -90,7 +91,9 @@ view model =
                 , Attribute.value (String.fromInt model.day)
                 ]
                 []
-            , Html.text " Part "
+            ]
+        , Html.div []
+            [ Html.text " Part "
             , Html.input
                 [ Attribute.max "2"
                 , Attribute.min "1"
@@ -99,7 +102,9 @@ view model =
                 , Attribute.value (String.fromInt model.part)
                 ]
                 []
-            , Html.text " Input "
+            ]
+        , Html.div []
+            [ Html.text " Input "
             , Html.button
                 [ Event.onClick FileRequested ]
                 [ case model.file of
@@ -107,9 +112,11 @@ view model =
                         Html.text "Select a file"
 
                     Just file ->
-                        Html.text (File.name file)
+                        Html.text ("Selected: " ++ File.name file)
                 ]
-            , Html.text " Output "
+            ]
+        , Html.div []
+            [ Html.text " Output "
             , Html.input
                 [ Attribute.readonly True
                 , Attribute.value (solve model)
@@ -120,6 +127,10 @@ view model =
             [ Html.a
                 [ Attribute.href "https://github.com/tfausak/advent-of-code-2020" ]
                 [ Html.text "github.com/tfausak/advent-of-code-2020" ]
+            , Html.br [] []
+            , Html.a
+                [ Attribute.href "https://package.elm-lang.org" ]
+                [ Html.text "package.elm-lang.org" ]
             ]
         ]
 
@@ -239,6 +250,12 @@ solve model =
 
                 ( 18, 2 ) ->
                     Day18.part2 content
+
+                ( 19, 1 ) ->
+                    Day19.part1 content
+
+                ( 19, 2 ) ->
+                    Day19.part2 content
 
                 _ ->
                     "no solution"
