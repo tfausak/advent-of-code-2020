@@ -34,7 +34,7 @@ part1 string =
             (\input ->
                 let
                     regex =
-                        toRegex input.matches 0
+                        toRegex 10 input.matches 0
                 in
                 input.messages
                     |> List.Extra.count (Regex.contains regex)
@@ -44,13 +44,32 @@ part1 string =
 
 
 part2 : String -> String
-part2 _ =
-    "TODO"
+part2 string =
+    string
+        |> String.split "\n\n"
+        |> Elf.listToTuple
+        |> Maybe.andThen parseInput
+        |> Maybe.map
+            (\input ->
+                let
+                    matches =
+                        input.matches
+                            |> Dict.insert 8 (Multiple [ [ 42 ], [ 42, 8 ] ])
+                            |> Dict.insert 11 (Multiple [ [ 42, 31 ], [ 42, 11, 31 ] ])
+
+                    regex =
+                        toRegex 14 matches 0
+                in
+                input.messages
+                    |> List.Extra.count (Regex.contains regex)
+                    |> String.fromInt
+            )
+        |> Maybe.withDefault "Failed to parse input!"
 
 
-toRegex : Dict Int Match -> Int -> Regex
-toRegex matches number =
-    toString matches number
+toRegex : Int -> Dict Int Match -> Int -> Regex
+toRegex limit matches number =
+    toString limit 0 matches number
         |> Maybe.andThen
             (\string ->
                 string
@@ -60,29 +79,33 @@ toRegex matches number =
         |> Maybe.withDefault Regex.never
 
 
-toString : Dict Int Match -> Int -> Maybe String
-toString matches number =
-    case Dict.get number matches of
-        Nothing ->
-            Nothing
+toString : Int -> Int -> Dict Int Match -> Int -> Maybe String
+toString limit depth matches number =
+    if depth > limit then
+        Just ""
 
-        Just (Single char) ->
-            Just (String.fromChar char)
+    else
+        case Dict.get number matches of
+            Nothing ->
+                Nothing
 
-        Just (Multiple groups) ->
-            groups
-                |> Maybe.Extra.traverse
-                    (\numbers ->
-                        numbers
-                            |> Maybe.Extra.traverse (toString matches)
-                            |> Maybe.map String.concat
-                    )
-                |> Maybe.map
-                    (\string ->
-                        string
-                            |> String.join "|"
-                            |> Elf.around "(" ")"
-                    )
+            Just (Single char) ->
+                Just (String.fromChar char)
+
+            Just (Multiple groups) ->
+                groups
+                    |> Maybe.Extra.traverse
+                        (\numbers ->
+                            numbers
+                                |> Maybe.Extra.traverse (toString limit (depth + 1) matches)
+                                |> Maybe.map String.concat
+                        )
+                    |> Maybe.map
+                        (\string ->
+                            string
+                                |> String.join "|"
+                                |> Elf.around "(" ")"
+                        )
 
 
 parseInput : ( String, String ) -> Maybe Input
