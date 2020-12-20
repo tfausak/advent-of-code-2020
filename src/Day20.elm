@@ -3,7 +3,9 @@ module Day20 exposing (part1, part2)
 import Array exposing (Array)
 import Dict exposing (Dict)
 import Elf
+import List.Extra
 import Maybe.Extra
+import Set exposing (Set)
 import String.Extra
 import UInt64 exposing (UInt64)
 
@@ -19,8 +21,24 @@ part1 string =
 
 
 part2 : String -> String
-part2 _ =
-    "TODO day 20 part 2"
+part2 string =
+    string
+        |> parseTiles
+        |> Maybe.andThen assembleImage
+        |> Maybe.andThen
+            (\tiles ->
+                tiles
+                    |> mergeTiles
+                    |> removeSeaMonsters
+            )
+        |> Maybe.map
+            (\points ->
+                points
+                    |> Set.size
+                    |> String.fromInt
+            )
+        |> Debug.log "done"
+        |> Maybe.withDefault ":("
 
 
 type alias Tile =
@@ -37,6 +55,107 @@ type alias Square a =
 
 type alias Point =
     ( Int, Int )
+
+
+removeSeaMonsters : Set Point -> Maybe (Set Point)
+removeSeaMonsters points =
+    points
+        |> (\ x -> let _ = Debug.log "points" (Set.size x) in x)
+        |> Set.toList
+        |> getBounds
+        |> Debug.log "bounds"
+        |> Maybe.map
+            (\( ( x0, y0 ), ( x1, y1 ) ) ->
+                List.range x0 x1
+                    |> List.concatMap
+                        (\x ->
+                            List.range y0 y1
+                                |> List.map (\y -> ( x, y ))
+                        )
+            )
+        |> Maybe.map (\ x -> let _ = Debug.log "more points" (List.length x) in x)
+        |> Maybe.andThen
+            (\ps ->
+                case List.filter (hasSeaMonster points) ps of
+                    [] ->
+                        Nothing
+
+                    _ ->
+                        let _ = Debug.log "sea monsters at" (List.length ps) in
+                        Just (List.foldl removeSeaMonster points ps)
+            )
+
+
+removeSeaMonster : Point -> Set Point -> Set Point
+removeSeaMonster ( x0, y0 ) points =
+    let
+        ps =
+            Set.map (\( x, y ) -> ( x0 + x, y0 + y )) seaMonster
+    in
+    Set.diff points ps
+
+
+hasSeaMonster : Set Point -> Point -> Bool
+hasSeaMonster points ( x0, y0 ) =
+    let
+        ps =
+            Set.map (\( x, y ) -> ( x0 + x, y0 + y )) seaMonster
+    in
+    Set.intersect points ps == ps
+
+
+seaMonster : Set Point
+seaMonster =
+    [ "                  # "
+    , "#    ##    ##    ###"
+    , " #  #  #  #  #  #   "
+    ]
+        |> List.indexedMap Tuple.pair
+        |> List.concatMap
+            (\( y, string ) ->
+                string
+                    |> String.toList
+                    |> List.indexedMap Tuple.pair
+                    |> List.filterMap
+                        (\( x, char ) ->
+                            if char == '#' then
+                                Just ( x, y )
+
+                            else
+                                Nothing
+                        )
+            )
+        |> Set.fromList
+
+
+mergeTiles : Dict Point Tile -> Set Point
+mergeTiles tiles =
+    tiles
+        |> Dict.toList
+        |> List.concatMap getPoints
+        |> Set.fromList
+
+
+getPoints : ( Point, Tile ) -> List Point
+getPoints ( ( x, y ), tile ) =
+    let
+        size =
+            tile.image.size - 2
+
+        toPoint row column =
+            case getAt tile.image row column of
+                Just True ->
+                    Just ( x * size + column, y * size + row )
+
+                _ ->
+                    Nothing
+
+        toPoints row =
+            List.range 1 size
+                |> List.filterMap (toPoint row)
+    in
+    List.range 1 size
+        |> List.concatMap toPoints
 
 
 multiplyCorners : Dict Point Tile -> Maybe UInt64
@@ -96,7 +215,16 @@ assembleImageWith assembled retry tiles =
         tile :: rest ->
             if Dict.isEmpty assembled then
                 -- Arbitrarily put an image at the origin.
-                assembleImageWith (Dict.insert ( 0, 0 ) tile assembled) retry rest
+                assembleImageWith
+                    (Dict.insert
+                    ( 0, 0 )
+                    {tile | image = tile.image
+                    |> rotateCounterclockwise
+                    |> Maybe.andThen rotateCounterclockwise
+                    |> Maybe.withDefault tile.image}
+                    assembled)
+                    retry
+                    rest
 
             else
                 case findCandidates tile assembled of
