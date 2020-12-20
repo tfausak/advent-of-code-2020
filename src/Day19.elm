@@ -85,27 +85,28 @@ toString limit depth matches number =
         Just ""
 
     else
-        case Dict.get number matches of
-            Nothing ->
-                Nothing
+        Dict.get number matches
+            |> Maybe.andThen
+                (\match ->
+                    case match of
+                        Single char ->
+                            Just (String.fromChar char)
 
-            Just (Single char) ->
-                Just (String.fromChar char)
-
-            Just (Multiple groups) ->
-                groups
-                    |> Maybe.Extra.traverse
-                        (\numbers ->
-                            numbers
-                                |> Maybe.Extra.traverse (toString limit (depth + 1) matches)
-                                |> Maybe.map String.concat
-                        )
-                    |> Maybe.map
-                        (\string ->
-                            string
-                                |> String.join "|"
-                                |> Elf.around "(" ")"
-                        )
+                        Multiple groups ->
+                            groups
+                                |> Maybe.Extra.traverse
+                                    (\numbers ->
+                                        numbers
+                                            |> Maybe.Extra.traverse (toString limit (depth + 1) matches)
+                                            |> Maybe.map String.concat
+                                    )
+                                |> Maybe.map
+                                    (\string ->
+                                        string
+                                            |> String.join "|"
+                                            |> Elf.around "(" ")"
+                                    )
+                )
 
 
 parseInput : ( String, String ) -> Maybe Input

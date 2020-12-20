@@ -4,7 +4,6 @@
         "elmtooling.elm-ls-vscode"
     ],
     "forwardPorts": [
-        3000,
         8000
     ],
     "image": "node:15.4.0-buster",
