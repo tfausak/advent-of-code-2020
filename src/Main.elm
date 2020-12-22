@@ -69,9 +69,9 @@ main =
 init : Flags -> ( Model, Cmd Msg )
 init _ =
     ( { content = Nothing
-      , day = 20
+      , day = 21
       , file = Nothing
-      , part = 2
+      , part = 1
       }
     , Cmd.none
     )
